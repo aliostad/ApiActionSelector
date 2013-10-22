@@ -11,7 +11,6 @@ For example, in this case we pick the first action (just to illustrate):
 ``` Csharp
 
 ApiActionSelector.AmbiguousActionResolver = (context, actions) => actions.First();
-
 ```
 
 If you cannot resolve, return null. This will result in the framework to throw the familiar ambiguous action exception.
