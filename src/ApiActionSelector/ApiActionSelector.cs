@@ -33,11 +33,7 @@ namespace System.Web.Http.Controllers
     /// </summary>
     public class ApiActionSelector : IHttpActionSelector
     {
-        private static
-            Func<HttpControllerContext, IEnumerable<ReflectedHttpActionDescriptor>, ReflectedHttpActionDescriptor>
-            _ambiguousActionResolver
-                = (a, b) => null;
-
+       
         private ActionSelectorCacheItem _fastCache;
         private readonly object _cacheKey = new object();
 
@@ -65,11 +61,12 @@ namespace System.Web.Http.Controllers
 
         /// <summary>
         /// This is called in case of ambiguous action scenario
+        /// return null if you cannot resolve the actions
         /// </summary>
-        public static Func<HttpControllerContext, IEnumerable<ReflectedHttpActionDescriptor>, ReflectedHttpActionDescriptor> AmbiguousActionResolver
+        protected virtual ReflectedHttpActionDescriptor ResolveAmbiguousActions(HttpControllerContext context,
+                IEnumerable<ReflectedHttpActionDescriptor> actionDescriptors)
         {
-            get { return _ambiguousActionResolver; }
-            set { _ambiguousActionResolver = value; }
+            return null;
         }
 
         private ActionSelectorCacheItem GetInternalSelector(HttpControllerDescriptor controllerDescriptor)
@@ -80,7 +77,7 @@ namespace System.Web.Http.Controllers
             // HttpControllerDescriptor.Properties cache
             if (_fastCache == null)
             {
-                ActionSelectorCacheItem selector = new ActionSelectorCacheItem(controllerDescriptor);
+                ActionSelectorCacheItem selector = new ActionSelectorCacheItem(controllerDescriptor, ResolveAmbiguousActions);
                 Interlocked.CompareExchange(ref _fastCache, selector, null);
                 return selector;
             }
@@ -99,7 +96,7 @@ namespace System.Web.Http.Controllers
                     return (ActionSelectorCacheItem)cacheValue;
                 }
                 // Race condition on initialization has no side effects
-                ActionSelectorCacheItem selector = new ActionSelectorCacheItem(controllerDescriptor);
+                ActionSelectorCacheItem selector = new ActionSelectorCacheItem(controllerDescriptor, ResolveAmbiguousActions);
                 controllerDescriptor.Properties.TryAdd(_cacheKey, selector);
                 return selector;
             }
@@ -136,9 +133,12 @@ namespace System.Web.Http.Controllers
             private readonly HttpMethod[] _cacheListVerbKinds = new HttpMethod[] { HttpMethod.Get, HttpMethod.Put, HttpMethod.Post };
 
             private readonly CandidateAction[][] _cacheListVerbs;
+            private readonly Func<HttpControllerContext, IEnumerable<ReflectedHttpActionDescriptor>, ReflectedHttpActionDescriptor> _ambiguousResolver;
 
-            public ActionSelectorCacheItem(HttpControllerDescriptor controllerDescriptor)
+            public ActionSelectorCacheItem(HttpControllerDescriptor controllerDescriptor, 
+                Func<HttpControllerContext, IEnumerable<ReflectedHttpActionDescriptor>, ReflectedHttpActionDescriptor> ambiguousResolver)
             {
+                _ambiguousResolver = ambiguousResolver;
                 Contract.Assert(controllerDescriptor != null);
 
                 // Initialize the cache entirely in the ctor on a single thread.
@@ -220,9 +220,9 @@ namespace System.Web.Http.Controllers
                         ElevateRouteData(controllerContext, selectedCandidates[0]);
                         return selectedCandidates[0].ActionDescriptor;
                     default:
-                        if (ApiActionSelector.AmbiguousActionResolver != null)
+                        if (_ambiguousResolver != null)
                         {
-                            var resolved = ApiActionSelector.AmbiguousActionResolver(controllerContext,
+                            var resolved = _ambiguousResolver(controllerContext,
                                 selectedCandidates.Select(x => x.ActionDescriptor));
                             if (resolved != null)
                                 return resolved;
