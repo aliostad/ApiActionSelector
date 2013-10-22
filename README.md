@@ -14,3 +14,9 @@ ApiActionSelector.AmbiguousActionResolver = (context, actions) => actions.First(
 ```
 
 If you cannot resolve, return null. This will result in the framework to throw the familiar ambiguous action exception.
+
+
+NOTE
+==
+
+I will be using this to resolve actions based on headers.
