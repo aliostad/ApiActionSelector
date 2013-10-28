@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -14,6 +16,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.Internal;
@@ -21,8 +24,13 @@ using System.Web.Http.ModelBinding;
 using System.Web.Http.Properties;
 using System.Web.Http.Routing;
 using System.Web.Http.ValueProviders;
+using ApiActionSelection.System.Collections.Generic;
+using ApiActionSelection.System.Collections.ObjectModel;
+using ApiActionSelection.System.Web.Http.Internal;
+using ApiActionSelection.System.Web.Http.Routing;
+using ApiActionSelection.System.Web.Http.ValueProviders;
 
-namespace System.Web.Http.Controllers
+namespace ApiActionSelection.System.Web.Http.Controllers
 {
     /// <summary>
     /// Reflection based action selector.
@@ -224,8 +232,12 @@ namespace System.Web.Http.Controllers
                         {
                             var resolved = _ambiguousResolver(controllerContext,
                                 selectedCandidates.Select(x => x.ActionDescriptor));
+
                             if (resolved != null)
+                            {
+                                ElevateRouteData(controllerContext, selectedCandidates.First(x => x.ActionDescriptor == resolved));
                                 return resolved;
+                            }
                         }
 
                         // Throws exception because multiple actions match the request
@@ -695,7 +707,7 @@ namespace System.Web.Http.Controllers
                 return Source.GetEnumerator();
             }
 
-            Collections.IEnumerator Collections.IEnumerable.GetEnumerator()
+            IEnumerator IEnumerable.GetEnumerator()
             {
                 return Source.GetEnumerator();
             }
@@ -703,7 +715,7 @@ namespace System.Web.Http.Controllers
     }
 }
 
-namespace System.Web.Http.Routing
+namespace ApiActionSelection.System.Web.Http.Routing
 {
     // This is static description of an action and can be shared across requests. 
     // Direct routes may cache a list of these. 
@@ -731,7 +743,7 @@ namespace System.Web.Http.Routing
     }
 }
 
-namespace System.Web.Http.Routing
+namespace ApiActionSelection.System.Web.Http.Routing
 {
     /// <summary>
     /// Provides keys for looking up route values and data tokens.
@@ -753,7 +765,7 @@ namespace System.Web.Http.Routing
     }
 }
 
-namespace System.Collections.Generic
+namespace ApiActionSelection.System.Collections.Generic
 {
     /// <summary>
     /// Helper extension methods for fast use of collections.
@@ -1019,7 +1031,7 @@ namespace System.Collections.Generic
     }
 }
 
-namespace System.Web.Http.Routing
+namespace ApiActionSelection.System.Web.Http.Routing
 {
     internal static class HttpRouteExtensions
     {
@@ -1082,7 +1094,7 @@ namespace System.Web.Http.Routing
 }
 
 
-namespace System.Collections.Generic
+namespace ApiActionSelection.System.Collections.Generic
 {
     /// <summary>
     /// Extension methods for <see cref="IDictionary{TKey,TValue}"/>.
@@ -1201,7 +1213,7 @@ namespace System.Collections.Generic
         }
     }
 }
-namespace System.Collections.ObjectModel
+namespace ApiActionSelection.System.Collections.ObjectModel
 {
     /// <summary>
     /// A class that inherits from Collection of T but also exposes its underlying data as List of T for performance.
@@ -1228,7 +1240,7 @@ namespace System.Collections.ObjectModel
     }
 }
 
-namespace System.Web.Http.Internal
+namespace ApiActionSelection.System.Web.Http.Internal
 {
     internal static class HttpParameterBindingExtensions
     {
@@ -1243,7 +1255,8 @@ namespace System.Web.Http.Internal
             if (valueProviderParameterBinding != null)
             {
                 IEnumerable<ValueProviderFactory> valueProviderFactories = valueProviderParameterBinding.ValueProviderFactories;
-                if (valueProviderFactories.Any() && valueProviderFactories.All(factory => factory is IUriValueProviderFactory))
+                if (valueProviderFactories.Any() && valueProviderFactories.All(factory => factory.GetType().GetInterfaces()
+                    .Any(x =>x.Name == "IUriValueProviderFactory")))
                 {
                     return true;
                 }
@@ -1254,14 +1267,14 @@ namespace System.Web.Http.Internal
     }
 }
 
-namespace System.Web.Http.ValueProviders
+namespace ApiActionSelection.System.Web.Http.ValueProviders
 {
     internal interface IUriValueProviderFactory
     {
     }
 }
 
-namespace System.Web.Http.Internal
+namespace ApiActionSelection.System.Web.Http.Internal
 {
     /// <summary>
     /// A static class that provides various <see cref="Type"/> related helpers.
