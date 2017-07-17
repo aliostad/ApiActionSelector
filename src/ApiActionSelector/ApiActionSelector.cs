@@ -18,17 +18,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Web.Http.Dispatcher;
 using System.Web.Http.Internal;
 using System.Web.Http.ModelBinding;
-using System.Web.Http.Properties;
 using System.Web.Http.Routing;
 using System.Web.Http.ValueProviders;
 using ApiActionSelection.System.Collections.Generic;
 using ApiActionSelection.System.Collections.ObjectModel;
 using ApiActionSelection.System.Web.Http.Internal;
 using ApiActionSelection.System.Web.Http.Routing;
-using ApiActionSelection.System.Web.Http.ValueProviders;
 
 namespace ApiActionSelection.System.Web.Http.Controllers
 {
@@ -1048,9 +1045,9 @@ namespace ApiActionSelection.System.Web.Http.Routing
 
             List<CandidateAction> candidates = new List<CandidateAction>();
 
-            ReflectedHttpActionDescriptor[] directRouteActions = null;
-            ReflectedHttpActionDescriptor[] possibleDirectRouteActions;
-            if (dataTokens.TryGetValue<ReflectedHttpActionDescriptor[]>(RouteKeys.ActionsDataTokenKey, out possibleDirectRouteActions))
+            HttpActionDescriptor[] directRouteActions = null;
+            HttpActionDescriptor[] possibleDirectRouteActions;
+            if (dataTokens.TryGetValue<HttpActionDescriptor[]>(RouteKeys.ActionsDataTokenKey, out possibleDirectRouteActions))
             {
                 if (possibleDirectRouteActions != null && possibleDirectRouteActions.Length > 0)
                 {
