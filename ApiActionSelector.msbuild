@@ -34,7 +34,7 @@
     <Exec WorkingDirectory="%(NugetExeDir.FullPath)" Command="nuget.exe pack ..\src\ApiActionSelector\ApiActionSelector.csproj -Build -OutputDirectory ..\artifacts\packages" />
   </Target>
   <Target Name="Publish">
-    <Exec WorkingDirectory="%(ScriptsDir.FullPath)" Command="powershell -file .\publish.ps1" />
+    <Exec WorkingDirectory="$(SolutionDir)" Command="powershell -file .\publish.ps1" />
   </Target>
 
 </Project>
